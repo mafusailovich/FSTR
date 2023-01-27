@@ -19,5 +19,5 @@ from pereval.views import SubmitData
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/pereval/', SubmitData.as_view() )
+    path('api/v1/pereval/', SubmitData.as_view(), name='api')
 ]

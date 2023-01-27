@@ -44,7 +44,7 @@ class Coords(models.Model):
 
 class Images(models.Model):
     title = models.CharField(max_length=255)
-    img = models.ImageField(max_length=255)
+    img = models.BinaryField(editable=True, max_length=None)
 
 
 class PerevalImages(models.Model):
