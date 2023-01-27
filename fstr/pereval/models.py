@@ -23,7 +23,7 @@ class PerevalAdded(models.Model):
     title = models.CharField(max_length=255)
     other_titles = models.CharField(max_length=255)
     connect = models.TextField(blank=True)
-    add_time = models.DateTimeField()
+    add_time = models.DateTimeField(auto_now=True)
     level_winter = models.CharField(max_length=255)
     level_spring = models.CharField(max_length=255)
     level_summer = models.CharField(max_length=255)
