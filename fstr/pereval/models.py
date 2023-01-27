@@ -43,9 +43,13 @@ class Coords(models.Model):
 
 class Images(models.Model):
     title = models.CharField(max_length=255)
-    img = models.ImageField()
+    img = models.ImageField(max_length=255)
 
 
 class PerevalImages(models.Model):
     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
     img = models.ForeignKey(Images, on_delete=models.CASCADE)
+
+class PerevalAreas(models.Model):
+    id_parent = models.BigIntegerField()
+    title = models.TextField()
