@@ -6,5 +6,5 @@ from rest_framework import generics
 # Create your views here.
 
 class SubmitData(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UsersSerializer
+    queryset = PerevalAdded.objects.all()
+    serializer_class = PerevalAddedSerializer
