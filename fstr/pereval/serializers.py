@@ -37,7 +37,7 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
         images_data = validated_data.pop('images')
         coord_data = validated_data.pop('coords')
         users_data = validated_data.pop('users')
-
+        
         if Users.objects.filter(email=users_data['email']).exists():
             user = Users.objects.get(email=users_data['email'])
         else:
@@ -48,12 +48,12 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
             user=user, coord=coord, **validated_data)
 
         list_of_images = []  # пустой список для последующего возврата получившегося сложного объекта
-        for i in images_data:  # создаются записи изображений в БД, отношения в таблице связей 
+        for i in images_data:  # создаются записи изображений в БД, отношения в таблице связей
             image = Images.objects.create(**i)
             PerevalImages.objects.create(pereval=pereval, img=image)
             list_of_images.append(image)
 
-        data = {'beautytitle': pereval.beautytitle, 'title': pereval.title, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
+        data = {'beautytitle': pereval.pk, 'title': pereval.title, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
                 'add_time': pereval.add_time, 'users': user, 'coords': coord, 'level_winter': pereval.level_winter,
                 'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': list_of_images}
 
