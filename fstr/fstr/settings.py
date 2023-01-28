@@ -12,16 +12,17 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import dotenv_values
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+config = dotenv_values()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-lne3%53(15!ey3gyyn^)q470u(5_-#t_85q4c*qv#e4y8a$8-^'
+SECRET_KEY = config['KEY'] #'django-insecure-lne3%53(15!ey3gyyn^)q470u(5_-#t_85q4c*qv#e4y8a$8-^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -86,10 +87,10 @@ DATABASES = {
     #    'NAME': BASE_DIR / 'db.sqlite3',
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'fstr',
-        'USER': 'postgres',
-        'PASSWORD': 'restorator',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'USER': config['FSTR_DB_LOGIN'],
+        'PASSWORD': config['FSTR_DB_PASS'],
+        'HOST': config['FSTR_DB_HOST'],
+        'PORT': config['FSTR_DB_PORT'],
     }
 }
 
