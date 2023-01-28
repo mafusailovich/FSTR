@@ -37,7 +37,7 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
         images_data = validated_data.pop('images')
         coord_data = validated_data.pop('coords')
         users_data = validated_data.pop('users')
-        
+
         if Users.objects.filter(email=users_data['email']).exists():
             user = Users.objects.get(email=users_data['email'])
         else:

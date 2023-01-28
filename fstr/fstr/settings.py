@@ -22,7 +22,8 @@ config = dotenv_values()
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config['KEY'] #'django-insecure-lne3%53(15!ey3gyyn^)q470u(5_-#t_85q4c*qv#e4y8a$8-^'
+# 'django-insecure-lne3%53(15!ey3gyyn^)q470u(5_-#t_85q4c*qv#e4y8a$8-^'
+SECRET_KEY = config['KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -83,8 +84,8 @@ WSGI_APPLICATION = 'fstr.wsgi.application'
 
 DATABASES = {
     'default': {
-    #    'ENGINE': 'django.db.backends.sqlite3',
-    #    'NAME': BASE_DIR / 'db.sqlite3',
+        #    'ENGINE': 'django.db.backends.sqlite3',
+        #    'NAME': BASE_DIR / 'db.sqlite3',
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'fstr',
         'USER': config['FSTR_DB_LOGIN'],
