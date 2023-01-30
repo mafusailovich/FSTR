@@ -35,28 +35,46 @@ class PerevalViewset(viewsets.ModelViewSet):
 
         return Response(data)
 
+    def partial_update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-    
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
 
+        return Response(serializer.data)
 
+    def get_queryset(self): #переопределяем метод для того, чтобы получить из запроса нужный параметр
+        queryset = PerevalAdded.objects.all()
+        user_email = self.request.query_params.get('user_email', None)
+        if user_email is not None:
+            queryset = Users.objects.filter(email=user_email)
+        return queryset
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if len(queryset) != 1:
+            return super().list(request, *args, **kwargs)
+        else:
+            perevals = PerevalAdded.objects.filter(user__id=queryset.values()[0]['id'])
+            user = model_to_dict(queryset[0], exclude=['id'])
+            result_dict = user
+            for pereval in perevals:
+                p = model_to_dict(pereval, exclude=['id','user', 'coord'])
+                coords = model_to_dict(pereval.coord, exclude=['id'])
+                p.update(coords=coords)
+                images = PerevalImages.objects.filter(pereval=pereval)
+                images = [model_to_dict(i.img, fields=['title','img']) for i in images]
+                for i in images:
+                    i['img'] = str(i['img'])
+                p.update(images=images)
+                pereval_n = f'{pereval.beautytitle} {pereval.title}'
+                result_dict[f'{pereval_n}'] = p
+            print(result_dict)
 
-
-
-#class RetrivePatchPereval(generics.RetrieveUpdateAPIView):
-    #queryset = PerevalAdded.objects.all()
-    #serializer_class = PerevalAddedSerializer
-
-    #def get(self, request, *args, **kwargs):
-    #    pk = kwargs.get('pk', None)
-    #    if not pk:
-    #        return Response({'error': 'Method RetriveNOTAllowed'})
-
-    #    try:
-    #        pereval = PerevalAdded.objects.filter(pk=pk).values()
-     #       print(f'{pereval}')
-     #   except:
-     #       print('Ошибка')
-
-
-      #  return
+        return Response(data=result_dict)

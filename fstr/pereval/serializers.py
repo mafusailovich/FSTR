@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 from rest_framework.response import Response
 from .models import Users, Coords, Images, PerevalAdded, PerevalImages
 from django.shortcuts import redirect
@@ -80,8 +80,11 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
             coord_data = {**coord_data}
             coord = model_to_dict(instance.coord, fields=['latitude','longitude','height'])
             if coord != coord_data:
-                Coords.objects.filter(id=instance.coord.id).update(latitude=coord_data['latitude'], longitude=coord_data['longitude'],\
-                height=coord_data['height'])
+                try:
+                    Coords.objects.filter(id=instance.coord.id).update(latitude=coord_data['latitude'], longitude=coord_data['longitude'],\
+                    height=coord_data['height'])
+                except Exception as e:
+                    print(e)
 
 
             pereval_data = {**validated_data}
@@ -109,3 +112,5 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
                 'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': images}
 
         return data
+
+

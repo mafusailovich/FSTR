@@ -19,6 +19,6 @@ from pereval.views import PerevalViewset
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/submitData/', PerevalViewset.as_view({'post':'create'}), ),
+    path('api/v1/submitData/', PerevalViewset.as_view({'post':'create', 'get':'list'}), ),
     path('api/v1/submitData/<int:pk>', PerevalViewset.as_view({'get':'retrieve','patch':'partial_update' }),),
 ]
