@@ -2,6 +2,8 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from .models import Users, Coords, Images, PerevalAdded, PerevalImages
 from django.shortcuts import redirect
+from django.forms.models import model_to_dict
+
 
 
 class CoordsSerializer(serializers.ModelSerializer):
@@ -32,6 +34,7 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
         fields = ['beautytitle', 'title', 'other_titles', 'connect', 'add_time', 'users', 'coords', 'level_winter',
                   'level_spring', 'level_summer', 'level_autumn', 'images']
 
+
     def create(self, validated_data):
         # извлекаю вложенные словари
         images_data = validated_data.pop('images')
@@ -56,5 +59,53 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
         data = {'beautytitle': pereval.pk, 'title': pereval.title, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
                 'add_time': pereval.add_time, 'users': user, 'coords': coord, 'level_winter': pereval.level_winter,
                 'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': list_of_images}
+
+        return data
+
+    def update(self, instance, validated_data):
+
+        if instance.status == 'new':
+            images_data = validated_data.pop('images')
+            coord_data = validated_data.pop('coords')
+            users_data = validated_data.pop('users')
+
+            images_data = [{**i} for i in images_data]
+            images = PerevalImages.objects.filter(pereval=instance)
+            images = [i.img for i in images]
+            counter = 0
+            for i in images:
+                result = Images.objects.filter(id=i.pk).update(title=images_data[counter]['title'], img=images_data[counter]['img'])
+                counter += 1
+
+            coord_data = {**coord_data}
+            coord = model_to_dict(instance.coord, fields=['latitude','longitude','height'])
+            if coord != coord_data:
+                Coords.objects.filter(id=instance.coord.id).update(latitude=coord_data['latitude'], longitude=coord_data['longitude'],\
+                height=coord_data['height'])
+
+
+            pereval_data = {**validated_data}
+            pereval = model_to_dict(instance, exclude=['id','date_added', 'status', 'coord', 'user'])
+            if pereval != pereval_data:
+                PerevalAdded.objects.filter(id=instance.id).update(
+                    beautytitle=pereval_data['beautytitle'],
+                    title = pereval_data['title'],
+                    other_titles = pereval_data['other_titles'],
+                    connect = pereval_data['connect'],
+                    add_time = pereval_data['add_time'],
+                    level_winter = pereval_data['level_winter'],
+                    level_spring = pereval_data['level_spring'],
+                    level_summer = pereval_data['level_summer'],
+                    level_autumn = pereval_data['level_autumn'],
+
+                )
+
+        images = PerevalImages.objects.filter(pereval=instance)
+        images = [i.img for i in images]
+        pereval = instance
+
+        data = {'beautytitle': pereval.pk, 'title': pereval.title, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
+                'add_time': pereval.add_time, 'users': instance.user,'coords': instance.coord, 'level_winter': pereval.level_winter,
+                'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': images}
 
         return data

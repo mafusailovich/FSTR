@@ -15,10 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from pereval.views import CreatePereval
+from pereval.views import PerevalViewset
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/submitData/', CreatePereval.as_view({'post':'create'}), ),
-    path('api/v1/submitData/<int:pk>', CreatePereval.as_view({'get':'retrieve'}),),
+    path('api/v1/submitData/', PerevalViewset.as_view({'post':'create'}), ),
+    path('api/v1/submitData/<int:pk>', PerevalViewset.as_view({'get':'retrieve','patch':'partial_update' }),),
 ]

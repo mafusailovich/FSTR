@@ -8,7 +8,7 @@ from django.forms.models import model_to_dict
 # Create your views here.
 
 
-class CreatePereval(viewsets.ModelViewSet):
+class PerevalViewset(viewsets.ModelViewSet):
     queryset = PerevalAdded.objects.all()
     serializer_class = PerevalAddedSerializer
 
@@ -33,12 +33,10 @@ class CreatePereval(viewsets.ModelViewSet):
                 'add_time': pereval.add_time, 'user': user,'coords': coords,'level_winter': pereval.level_winter,
                 'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': images }
 
-
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
-
-
         return Response(data)
+
+
+    
 
 
 

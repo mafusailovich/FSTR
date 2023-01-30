@@ -24,7 +24,7 @@ CHOISES = {('1', 'new'), ('2', 'pending'),
 class PerevalAdded(models.Model):
     date_added = models.DateTimeField(auto_now=True)
     beautytitle = models.CharField(max_length=255)
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255,unique=True)
     other_titles = models.CharField(max_length=255)
     connect = models.TextField(blank=True)
     add_time = models.DateTimeField()
