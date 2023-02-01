@@ -69,7 +69,7 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         exceptions_list = {}
-
+        
         if instance.status == 'new':
             images_data = validated_data.pop('images')
             coord_data = validated_data.pop('coords')
@@ -89,14 +89,7 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
                     list_of_images.append(image)
             except Exception as e:
                 exceptions_list['images'] = f'Ошибка обновления базы Images или связей, {e}'
-            #counter = 0
-            #for i in images:
-            #    try:
-            #        Images.objects.filter(id=i.pk).update(title=images_data[counter]['title'], img=images_data[counter]['img'])
-            #    except Exception as e:
-            #        exceptions_list['images'] = f'Ошибка обновления полей базы Images, {e}'
 
-               # counter += 1
 
             #записываем в БД координаты
             coord_data = {**coord_data}
@@ -127,17 +120,20 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
                     )
                 except Exception as e:
                     exceptions_list['coords'] = f'Ошибка обновления полей базы Coords, {e}'
+        else:
+            exceptions_list['status'] = f'Запись имеет статус  {instance.status}. Редактирование невозможно.'
+            list_of_images = {}
 
         pereval = instance
 
         if exceptions_list:
-            status = 0
+            state = 0
         else:
-            status = 1
+            state = 1
             exceptions_list = {'Ошибок нет, все ОК'}
 
-        data = {'beautytitle': status , 'title': exceptions_list, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
+        data = {'beautytitle': state , 'title': exceptions_list, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
                 'add_time': pereval.add_time, 'users': instance.user,'coords': instance.coord, 'level_winter': pereval.level_winter,
                 'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': list_of_images}
-        print(data)
+
         return data
