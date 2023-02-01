@@ -14,11 +14,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 from pereval.views import PerevalViewset
+from django.views.generic import TemplateView
+from rest_framework import permissions
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/submitData/', PerevalViewset.as_view({'post':'create', 'get':'list'}), ),
-    path('api/v1/submitData/<int:pk>', PerevalViewset.as_view({'get':'retrieve','patch':'partial_update' }),),
+    path('submitData/', PerevalViewset.as_view({'post':'create', 'get':'list'}), name='submitData' ),
+    path('submitData/<int:pk>', PerevalViewset.as_view({'get':'retrieve','patch':'partial_update' }), name='submitDataDet'),
+    path('swagger-ui/', TemplateView.as_view(
+       template_name='swagger-ui.html',
+       extra_context={'schema_url':'openapi-schema'},
+   ), name='swagger-ui'),
 ]

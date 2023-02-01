@@ -16,8 +16,8 @@ class PerevalViewset(viewsets.ModelViewSet):
         serializer_for_writing =  self.serializer_class(data=request.data)
         serializer_for_writing.is_valid(raise_exception=True)
         serializer_for_writing.save()
-        return Response(data={'status': status.HTTP_200_OK, 'message': 'Отправление успешно', 'id': serializer_for_writing.data['beautytitle']},
-                        status=status.HTTP_200_OK)
+        return Response(data={'status': status.HTTP_201_CREATED, 'message': 'Отправление успешно', 'id': serializer_for_writing.data['beautytitle']},
+                        status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args, **kwargs):
         pereval = self.get_object() #получаем объект из запроса
@@ -47,7 +47,10 @@ class PerevalViewset(viewsets.ModelViewSet):
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return Response(serializer.data)
+        state = serializer.data['beautytitle']
+        message = serializer.data['title']
+
+        return Response(data={'state': state, 'message': message})
 
     def get_queryset(self): #переопределяем метод для того, чтобы получить из запроса нужный параметр
         queryset = PerevalAdded.objects.all()
@@ -58,23 +61,26 @@ class PerevalViewset(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        if len(queryset) != 1:
-            return super().list(request, *args, **kwargs)
-        else:
-            perevals = PerevalAdded.objects.filter(user__id=queryset.values()[0]['id'])
-            user = model_to_dict(queryset[0], exclude=['id'])
-            result_dict = user
-            for pereval in perevals:
-                p = model_to_dict(pereval, exclude=['id','user', 'coord'])
-                coords = model_to_dict(pereval.coord, exclude=['id'])
-                p.update(coords=coords)
-                images = PerevalImages.objects.filter(pereval=pereval)
-                images = [model_to_dict(i.img, fields=['title','img']) for i in images]
-                for i in images:
-                    i['img'] = str(i['img'])
-                p.update(images=images)
-                pereval_n = f'{pereval.beautytitle} {pereval.title}'
-                result_dict[f'{pereval_n}'] = p
-            print(result_dict)
 
-        return Response(data=result_dict)
+        if queryset: #если запрос не пустой, то будем выводить добавленые перевалы по пользователям
+            if len(queryset) > 1 or not queryset.values()[0]['email']:
+                queryset = Users.objects.all()
+            result_dict = {}
+            for q in range(len(queryset)):
+                perevals = PerevalAdded.objects.filter(user__id=queryset.values()[q]['id'])
+                user = model_to_dict(queryset[q], exclude=['id'])
+                result_dict[user['email']] = user
+                for pereval in perevals:
+                    p = model_to_dict(pereval, exclude=['id','user', 'coord'])
+                    coords = model_to_dict(pereval.coord, exclude=['id'])
+                    p.update(coords=coords)
+                    images = PerevalImages.objects.filter(pereval=pereval)
+                    images = [model_to_dict(i.img, fields=['title','img']) for i in images]
+                    for i in images:
+                        i['img'] = str(i['img'])
+                    p.update(images=images)
+                    pereval_n = f'{pereval.beautytitle} {pereval.title}'
+                    result_dict[f'{pereval_n}'] = p
+        else:
+            return Response({'status': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        return Response(data=result_dict, status=status.HTTP_200_OK)

@@ -1,0 +1,307 @@
+openapi: 3.0.2
+info:
+  title: 'FSTR'
+  version: '0.1'
+paths:
+  /submitData/:
+    get:
+      operationId: listPerevals
+      description: 'Если параметр user_email не передан, то метод выводит список существующих перевалов по пользователю (формат вывода можно посмотреть ниже)'
+      parameters:
+      - name: user_email
+        in: query
+        description: 'Выводит все перевалы конкретного пользователя (пользователь выбирается по уникальному полю email)'
+        schema:
+          type: string
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListUserPerevals'
+
+          description: ''
+      tags:
+      - submitData
+    post:
+      operationId: createPereval
+      description: 'Создает перевал. В перевал добавляются данные о координатах перевала, фото перевала и пользователь, добавляющий информацию. Формат для образца находится ниже. Картинки должны загружаться как байтовая строка (bytea в БД). Координы имеют тип float.'
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pereval'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pereval'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pereval'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Created'
+          description: 'В поле status попадает статус (201, если все хорошо), в поле message сообщение (Отправление успешно, если все хорошо), поле id - идентификатор созданной записи (если будет ошибка, то id будет Null)'
+      tags:
+      - submitData
+
+  /submitData/{id}:
+    get:
+      operationId: retrievePerevalAdded
+      description: 'Выводит информацию о перевале по его уникальному идентификатору ID'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: 'Уникальный идентификатор перевала ID'
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pereval'
+          description: 'Схема вывода данных'
+      tags:
+      - submitData
+    patch:
+      operationId: partialUpdatePerevalAdded
+      description: 'Обновление записи о перевале. Можно обновлять все поля, кроме полей объекта пользователь. Для обновления передается уникальный ID перевала.'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: 'Уникальное значение ID для перевала'
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pereval'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pereval'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pereval'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Updated'
+          description: ''
+      tags:
+      - submitData
+
+components:
+  schemas:
+    Pereval:
+      type: object
+      properties:
+        beautytitle:
+          type: string
+          maxLength: 255
+        title:
+          type: string
+          maxLength: 255
+        other_titles:
+          type: string
+          maxLength: 255
+        connect:
+          type: string
+        add_time:
+          type: string
+          format: date-time
+        users:
+          type: object
+          properties:
+            email:
+              type: string
+              format: email
+              maxLength: 255
+            name:
+              type: string
+              maxLength: 30
+            fam:
+              type: string
+              maxLength: 30
+            otc:
+              type: string
+              maxLength: 30
+            phone:
+              type: string
+              maxLength: 12
+          required:
+          - email
+          - name
+          - fam
+          - otc
+          - phone
+        coords:
+          type: object
+          properties:
+            latitude:
+              type: float
+            longitude:
+              type: float
+            height:
+              type: integer
+              maximum: 2147483647
+              minimum: -2147483648
+          required:
+          - latitude
+          - longitude
+          - height
+        level_winter:
+          type: string
+          maxLength: 255
+        level_spring:
+          type: string
+          maxLength: 255
+        level_summer:
+          type: string
+          maxLength: 255
+        level_autumn:
+          type: string
+          maxLength: 255
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 255
+              img:
+                type: byte
+            required:
+            - title
+            - img
+      required:
+      - beautytitle
+      - title
+      - other_titles
+      - add_time
+      - users
+      - coords
+      - images
+
+    ListUserPerevals:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        name:
+          type: string
+          maxLength: 30
+        fam:
+          type: string
+          maxLength: 30
+        otc:
+          type: string
+          maxLength: 30
+        phone:
+          type: string
+          maxLength: 12
+        per:
+          type: object
+          properties:
+            beautytitle:
+              type: string
+              maxLength: 255
+            title:
+              type: string
+              maxLength: 255
+            other_titles:
+              type: string
+              maxLength: 255
+            connect:
+              type: string
+            add_time:
+              type: string
+              format: date-time
+            level_winter:
+              type: string
+              maxLength: 255
+            level_spring:
+              type: string
+              maxLength: 255
+            level_summer:
+              type: string
+              maxLength: 255
+            level_autumn:
+              type: string
+              maxLength: 255
+            status:
+              type: string
+              maxLength: 8
+          required:
+          - beautytitle
+          - title
+          - other_titles
+          - add_time
+        coords:
+            type: object
+            properties:
+              latitude:
+                type: float
+              longitude:
+                type: float
+              height:
+                type: integer
+                maximum: 2147483647
+                minimum: -2147483648
+            required:
+            - latitude
+            - longitude
+            - height
+        images:
+            type: array
+            items:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 255
+                img:
+                  type: binary
+              required:
+              - title
+              - img
+      required:
+      - email
+      - name
+      - fam
+      - otc
+      - phone
+
+    Created:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+          maxLength: 255
+        id:
+          type: integer
+
+    Updated:
+      type: object
+      properties:
+        state:
+          type: integer
+        message:
+          type: string
+          maxLength: 255

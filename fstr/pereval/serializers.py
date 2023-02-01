@@ -23,6 +23,11 @@ class UsersSerializer(serializers.ModelSerializer):
         model = Users
         fields = ['email', 'name', 'fam', 'otc', 'phone']
 
+class PerevalListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PerevalAdded
+        exclude = ['id', 'coord', 'user', 'date_added']
+
 
 class PerevalAddedSerializer(serializers.ModelSerializer):
     users = UsersSerializer()
@@ -63,34 +68,52 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
+        exceptions_list = {}
 
         if instance.status == 'new':
             images_data = validated_data.pop('images')
             coord_data = validated_data.pop('coords')
             users_data = validated_data.pop('users')
 
-            images_data = [{**i} for i in images_data]
-            images = PerevalImages.objects.filter(pereval=instance)
-            images = [i.img for i in images]
-            counter = 0
-            for i in images:
-                result = Images.objects.filter(id=i.pk).update(title=images_data[counter]['title'], img=images_data[counter]['img'])
-                counter += 1
+            #удаляем из БД связи и картинки
+            try:
+                images = PerevalImages.objects.filter(pereval=instance)
+                if images:
+                    for i in images:
+                        i.img.delete()
+                        i.delete()
+                list_of_images = []  # пустой список для последующего возврата получившегося сложного объекта
+                for i in images_data:  # создаются записи изображений в БД, отношения в таблице связей
+                    image = Images.objects.create(**i)
+                    PerevalImages.objects.create(pereval=instance, img=image)
+                    list_of_images.append(image)
+            except Exception as e:
+                exceptions_list['images'] = f'Ошибка обновления базы Images или связей, {e}'
+            #counter = 0
+            #for i in images:
+            #    try:
+            #        Images.objects.filter(id=i.pk).update(title=images_data[counter]['title'], img=images_data[counter]['img'])
+            #    except Exception as e:
+            #        exceptions_list['images'] = f'Ошибка обновления полей базы Images, {e}'
 
+               # counter += 1
+
+            #записываем в БД координаты
             coord_data = {**coord_data}
             coord = model_to_dict(instance.coord, fields=['latitude','longitude','height'])
-            if coord != coord_data:
+            if coord != coord_data: #будем что-то обновлять, только если новые данные не совпадают с имеющимися в базе
                 try:
                     Coords.objects.filter(id=instance.coord.id).update(latitude=coord_data['latitude'], longitude=coord_data['longitude'],\
                     height=coord_data['height'])
                 except Exception as e:
-                    print(e)
+                    exceptions_list['coords'] = f'Ошибка обновления полей базы Coords, {e}'
 
-
+            #обновляем перевал
             pereval_data = {**validated_data}
             pereval = model_to_dict(instance, exclude=['id','date_added', 'status', 'coord', 'user'])
             if pereval != pereval_data:
-                PerevalAdded.objects.filter(id=instance.id).update(
+                try:
+                    PerevalAdded.objects.filter(id=instance.id).update(
                     beautytitle=pereval_data['beautytitle'],
                     title = pereval_data['title'],
                     other_titles = pereval_data['other_titles'],
@@ -101,16 +124,20 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
                     level_summer = pereval_data['level_summer'],
                     level_autumn = pereval_data['level_autumn'],
 
-                )
+                    )
+                except Exception as e:
+                    exceptions_list['coords'] = f'Ошибка обновления полей базы Coords, {e}'
 
-        images = PerevalImages.objects.filter(pereval=instance)
-        images = [i.img for i in images]
         pereval = instance
 
-        data = {'beautytitle': pereval.pk, 'title': pereval.title, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
+        if exceptions_list:
+            status = 0
+        else:
+            status = 1
+            exceptions_list = {'Ошибок нет, все ОК'}
+
+        data = {'beautytitle': status , 'title': exceptions_list, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
                 'add_time': pereval.add_time, 'users': instance.user,'coords': instance.coord, 'level_winter': pereval.level_winter,
-                'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': images}
-
+                'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': list_of_images}
+        print(data)
         return data
-
-
