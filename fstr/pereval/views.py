@@ -13,32 +13,39 @@ class PerevalViewset(viewsets.ModelViewSet):
     serializer_class = PerevalAddedSerializer
 
     def create(self, request):
-        serializer_for_writing =  self.serializer_class(data=request.data)
+        serializer_for_writing = self.serializer_class(data=request.data)
         serializer_for_writing.is_valid(raise_exception=True)
         serializer_for_writing.save()
         return Response(data={'status': status.HTTP_201_CREATED, 'message': 'Отправление успешно', 'id': serializer_for_writing.data['beautytitle']},
                         status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args, **kwargs):
-        pereval = self.get_object() #получаем объект из запроса
-        images = PerevalImages.objects.filter(pereval=pereval) #получаем список ссылок на изображения для перевала
+        pereval = self.get_object()  # получаем объект из запроса
+        # получаем список ссылок на изображения для перевала
+        images = PerevalImages.objects.filter(pereval=pereval)
 
-        images = [model_to_dict(i.img, fields=['title','img']) for i in images] #геренируем словарь для вывода списка изображений
+        # геренируем словарь для вывода списка изображений
+        images = [model_to_dict(i.img, fields=['title', 'img'])
+                  for i in images]
         for i in images:
-            i['img'] = str(i['img']) #выдаем бинарное значение из базы как строку символов
-        user = model_to_dict(pereval.user, exclude=['id']) #генерируем словарь с пользователями
-        coords = model_to_dict(pereval.coord, exclude=['id']) #генерируем словарь координат перевала
+            # выдаем бинарное значение из базы как строку символов
+            i['img'] = str(i['img'])
+        # генерируем словарь с пользователями
+        user = model_to_dict(pereval.user, exclude=['id'])
+        # генерируем словарь координат перевала
+        coords = model_to_dict(pereval.coord, exclude=['id'])
 
         data = {'beautytitle': pereval.beautytitle, 'title': pereval.title, 'status': pereval.status, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
-                'add_time': pereval.add_time, 'user': user,'coords': coords,'level_winter': pereval.level_winter,
-                'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': images }
+                'add_time': pereval.add_time, 'user': user, 'coords': coords, 'level_winter': pereval.level_winter,
+                'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': images}
 
         return Response(data)
 
     def partial_update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -52,7 +59,7 @@ class PerevalViewset(viewsets.ModelViewSet):
 
         return Response(data={'state': state, 'message': message})
 
-    def get_queryset(self): #переопределяем метод для того, чтобы получить из запроса нужный параметр
+    def get_queryset(self):  # переопределяем метод для того, чтобы получить из запроса нужный параметр
         queryset = PerevalAdded.objects.all()
         user_email = self.request.query_params.get('user_email', None)
         if user_email is not None:
@@ -62,20 +69,22 @@ class PerevalViewset(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 
-        if queryset: #если запрос не пустой, то будем выводить добавленые перевалы по пользователям
+        if queryset:  # если запрос не пустой, то будем выводить добавленые перевалы по пользователям
             if len(queryset) > 1 or not queryset.values()[0]['email']:
                 queryset = Users.objects.all()
             result_dict = {}
             for q in range(len(queryset)):
-                perevals = PerevalAdded.objects.filter(user__id=queryset.values()[q]['id'])
+                perevals = PerevalAdded.objects.filter(
+                    user__id=queryset.values()[q]['id'])
                 user = model_to_dict(queryset[q], exclude=['id'])
                 result_dict[user['email']] = user
                 for pereval in perevals:
-                    p = model_to_dict(pereval, exclude=['id','user', 'coord'])
+                    p = model_to_dict(pereval, exclude=['id', 'user', 'coord'])
                     coords = model_to_dict(pereval.coord, exclude=['id'])
                     p.update(coords=coords)
                     images = PerevalImages.objects.filter(pereval=pereval)
-                    images = [model_to_dict(i.img, fields=['title','img']) for i in images]
+                    images = [model_to_dict(
+                        i.img, fields=['title', 'img']) for i in images]
                     for i in images:
                         i['img'] = str(i['img'])
                     p.update(images=images)

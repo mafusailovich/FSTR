@@ -5,7 +5,6 @@ from django.shortcuts import redirect
 from django.forms.models import model_to_dict
 
 
-
 class CoordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coords
@@ -23,6 +22,7 @@ class UsersSerializer(serializers.ModelSerializer):
         model = Users
         fields = ['email', 'name', 'fam', 'otc', 'phone']
 
+
 class PerevalListSerializer(serializers.ModelSerializer):
     class Meta:
         model = PerevalAdded
@@ -38,7 +38,6 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
         model = PerevalAdded
         fields = ['beautytitle', 'title', 'other_titles', 'connect', 'add_time', 'users', 'coords', 'level_winter',
                   'level_spring', 'level_summer', 'level_autumn', 'images']
-
 
     def create(self, validated_data):
         # извлекаю вложенные словари
@@ -69,13 +68,13 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         exceptions_list = {}
-        
+
         if instance.status == 'new':
             images_data = validated_data.pop('images')
             coord_data = validated_data.pop('coords')
             users_data = validated_data.pop('users')
 
-            #удаляем из БД связи и картинки
+            # удаляем из БД связи и картинки
             try:
                 images = PerevalImages.objects.filter(pereval=instance)
                 if images:
@@ -90,32 +89,33 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
             except Exception as e:
                 exceptions_list['images'] = f'Ошибка обновления базы Images или связей, {e}'
 
-
-            #записываем в БД координаты
+            # записываем в БД координаты
             coord_data = {**coord_data}
-            coord = model_to_dict(instance.coord, fields=['latitude','longitude','height'])
-            if coord != coord_data: #будем что-то обновлять, только если новые данные не совпадают с имеющимися в базе
+            coord = model_to_dict(instance.coord, fields=[
+                                  'latitude', 'longitude', 'height'])
+            if coord != coord_data:  # будем что-то обновлять, только если новые данные не совпадают с имеющимися в базе
                 try:
-                    Coords.objects.filter(id=instance.coord.id).update(latitude=coord_data['latitude'], longitude=coord_data['longitude'],\
-                    height=coord_data['height'])
+                    Coords.objects.filter(id=instance.coord.id).update(latitude=coord_data['latitude'], longitude=coord_data['longitude'],
+                                                                       height=coord_data['height'])
                 except Exception as e:
                     exceptions_list['coords'] = f'Ошибка обновления полей базы Coords, {e}'
 
-            #обновляем перевал
+            # обновляем перевал
             pereval_data = {**validated_data}
-            pereval = model_to_dict(instance, exclude=['id','date_added', 'status', 'coord', 'user'])
+            pereval = model_to_dict(
+                instance, exclude=['id', 'date_added', 'status', 'coord', 'user'])
             if pereval != pereval_data:
                 try:
                     PerevalAdded.objects.filter(id=instance.id).update(
-                    beautytitle=pereval_data['beautytitle'],
-                    title = pereval_data['title'],
-                    other_titles = pereval_data['other_titles'],
-                    connect = pereval_data['connect'],
-                    add_time = pereval_data['add_time'],
-                    level_winter = pereval_data['level_winter'],
-                    level_spring = pereval_data['level_spring'],
-                    level_summer = pereval_data['level_summer'],
-                    level_autumn = pereval_data['level_autumn'],
+                        beautytitle=pereval_data['beautytitle'],
+                        title=pereval_data['title'],
+                        other_titles=pereval_data['other_titles'],
+                        connect=pereval_data['connect'],
+                        add_time=pereval_data['add_time'],
+                        level_winter=pereval_data['level_winter'],
+                        level_spring=pereval_data['level_spring'],
+                        level_summer=pereval_data['level_summer'],
+                        level_autumn=pereval_data['level_autumn'],
 
                     )
                 except Exception as e:
@@ -132,8 +132,8 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
             state = 1
             exceptions_list = {'Ошибок нет, все ОК'}
 
-        data = {'beautytitle': state , 'title': exceptions_list, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
-                'add_time': pereval.add_time, 'users': instance.user,'coords': instance.coord, 'level_winter': pereval.level_winter,
+        data = {'beautytitle': state, 'title': exceptions_list, 'other_titles': pereval.other_titles, 'connect': pereval.connect,
+                'add_time': pereval.add_time, 'users': instance.user, 'coords': instance.coord, 'level_winter': pereval.level_winter,
                 'level_spring': pereval.level_spring, 'level_summer': pereval.level_summer, 'level_autumn': pereval.level_autumn, 'images': list_of_images}
 
         return data
