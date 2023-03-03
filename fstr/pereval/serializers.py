@@ -1,9 +1,19 @@
 from rest_framework import serializers, exceptions
 from rest_framework.response import Response
-from .models import Users, Coords, Images, PerevalAdded, PerevalImages
+from .models import Users, Coords, Images, PerevalAdded, PerevalImages, IMGTEST
 from django.shortcuts import redirect
 from django.forms.models import model_to_dict
+from drf_extra_fields.fields import Base64ImageField
+from django.core.exceptions import ValidationError
+import json
+import base64
 
+class IMGTESTSerializer(serializers.ModelSerializer):
+    img = Base64ImageField(required=False)
+
+    class Meta:
+        model = IMGTEST
+        fields = ['img']
 
 class CoordsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,6 +22,8 @@ class CoordsSerializer(serializers.ModelSerializer):
 
 
 class ImagesSerializer(serializers.ModelSerializer):
+    img = serializers.CharField()
+
     class Meta:
         model = Images
         fields = ['title', 'img']
@@ -56,6 +68,10 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
 
         list_of_images = []  # пустой список для последующего возврата получившегося сложного объекта
         for i in images_data:  # создаются записи изображений в БД, отношения в таблице связей
+            temp = i['img']
+            temp = temp[1:-1]
+            temp = temp.encode('utf-8')
+            i['img'] = base64.b64decode(temp)
             image = Images.objects.create(**i)
             PerevalImages.objects.create(pereval=pereval, img=image)
             list_of_images.append(image)
@@ -83,6 +99,10 @@ class PerevalAddedSerializer(serializers.ModelSerializer):
                         i.delete()
                 list_of_images = []  # пустой список для последующего возврата получившегося сложного объекта
                 for i in images_data:  # создаются записи изображений в БД, отношения в таблице связей
+                    temp = i['img']
+                    temp = temp[1:-1]
+                    temp = temp.encode('utf-8')
+                    i['img'] = base64.b64decode(temp)
                     image = Images.objects.create(**i)
                     PerevalImages.objects.create(pereval=instance, img=image)
                     list_of_images.append(image)

@@ -3,6 +3,13 @@ from .models import *
 from .serializers import *
 from rest_framework import generics, status, viewsets
 from django.forms.models import model_to_dict
+import base64
+from pathlib import Path
+import json
+from django.views.generic import DetailView
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 
 # Create your views here.
@@ -23,13 +30,16 @@ class PerevalViewset(viewsets.ModelViewSet):
         pereval = self.get_object()  # получаем объект из запроса
         # получаем список ссылок на изображения для перевала
         images = PerevalImages.objects.filter(pereval=pereval)
+        for i in images:
+            print(i.img.img)
 
         # геренируем словарь для вывода списка изображений
         images = [model_to_dict(i.img, fields=['title', 'img'])
                   for i in images]
         for i in images:
             # выдаем бинарное значение из базы как строку символов
-            i['img'] = str(i['img'])
+            i['img'] = str(bytes(i['img']))
+
         # генерируем словарь с пользователями
         user = model_to_dict(pereval.user, exclude=['id'])
         # генерируем словарь координат перевала
@@ -70,7 +80,7 @@ class PerevalViewset(viewsets.ModelViewSet):
         queryset = self.get_queryset()
 
         if queryset:  # если запрос не пустой, то будем выводить добавленые перевалы по пользователям
-            if len(queryset) > 1 or not queryset.values()[0]['email']:
+            if len(queryset) == 1 and 'email' not in queryset.values()[0] or len(queryset) > 1:
                 queryset = Users.objects.all()
             result_dict = {}
             for q in range(len(queryset)):
@@ -86,10 +96,33 @@ class PerevalViewset(viewsets.ModelViewSet):
                     images = [model_to_dict(
                         i.img, fields=['title', 'img']) for i in images]
                     for i in images:
-                        i['img'] = str(i['img'])
+                        i['img'] = str(bytes(i['img']))
                     p.update(images=images)
                     pereval_n = f'{pereval.beautytitle} {pereval.title}'
                     result_dict[f'{pereval_n}'] = p
         else:
             return Response({'status': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         return Response(data=result_dict, status=status.HTTP_200_OK)
+
+
+class IMGVeiw(viewsets.ModelViewSet):
+    queryset = IMGTEST.objects.all()
+    serializer_class = IMGTESTSerializer
+
+
+    #def create(self, request):
+    #    serializer = self.serializer_class(data=request.data)
+        #temp = serializer.initial_data['img']
+        #temp = temp[1:-1]
+        #temp = temp.encode('ascii')
+        #temp = base64.b64decode(temp)
+     #   serializer.is_valid(raise_exception=True)
+        #serializer.validated_data['img'] = temp
+      #  serializer.save()
+       # print(serializer.data)
+        #return Response(data={'status':'ok'})
+
+class EmpImageDisplay(DetailView):
+    model = IMGTEST
+    template_name = 'image_display.html'
+    context_object_name = 'img'

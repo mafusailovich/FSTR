@@ -57,7 +57,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'fstr.urls'
 
 MEDIA_ROOT = BASE_DIR / 'upload'
-MEDIA_URL = '/media/'
+MEDIA_URL = '/upload/'
 
 
 TEMPLATES = [

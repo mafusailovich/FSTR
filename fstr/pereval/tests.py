@@ -1,46 +1,105 @@
 from django.test import TestCase
-from rest_framework.test import APITestCase, APIRequestFactory
+from rest_framework.test import APITestCase
 from django.urls import reverse
 from rest_framework import status
+import base64
+import json
+from .models import *
+
 
 # Create your tests here.
-
 class PerevalTests(APITestCase):
-    def test_post_pereval(self):
-        url = reverse('submitData')
+
+    def setUp(self):
+        images = [b'12345', b'12345']
+        for i in range(len(images)):
+            images[i] = base64.b64encode(images[i]).decode('utf-8')
+            images[i] = json.dumps(images[i])
         data = {
-            "beautytitle": "пер.",
-            "title": "Перевал 9",
-            "other_titles": "ХЗ",
-            "connect": "",
-            "add_time": "2023-01-27T00:04:00Z",
-            "users": {
-                "email": "test2@yandex.ru",
-                "name": "epifan",
-                "fam": "zalublinskiy",
-                "otc": "mafusailovich",
-                "phone": "888888888"
+        "beautytitle": "пер.",
+        "title": "Перевал 55",
+        "other_titles": "оу",
+        "connect": "ыдвлаоы",
+        "add_time": "2023-02-07T09:51:32.582Z",
+        "users": {
+            "email": "test1@yandex.ru",
+            "name": "string",
+            "fam": "string",
+            "otc": "string",
+            "phone": "string"
+        },
+        "coords": {
+            "latitude": "88.88",
+            "longitude": "88.88",
+            "height": "214"
+        },
+        "level_winter": "string",
+        "level_spring": "string",
+        "level_summer": "string",
+        "level_autumn": "string",
+        "images": [
+            {
+            "title": "string",
+            "img": images[0]
             },
-            "coords": {
-                "latitude": 88.77,
-                "longitude": 88.98,
-                "height": 21
-            },
-            "level_winter": "a;",
-            "level_spring": "a;lsdkfj",
-            "level_summer": "a;sdlkfj",
-            "level_autumn": "ad;lsfkj",
-            "images": [{"title": "a;sldkjf","img": "imagesss"},{"title": "111","img":"imagesss"}]
+            {
+            "title": "string",
+            "img": images[1]
+            }
+            ]
         }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post(reverse('submitData'), data, format='json')
 
     def test_get_listperevals(self):
-        url = reverse('submitData')
-        print(url)
-        #data = {'name': 'DabApps'}
-        response = self.client.get(url, format='json')
-        print(response)
+        response = self.client.get(reverse('submitData'), format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        #self.assertEqual(Account.objects.count(), 1)
-        #self.assertEqual(Account.objects.get().name, 'DabApps')
+
+    def test_retrive(self):
+        response = self.client.get(reverse('submitDataDet',args=[4]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_post_pereval(self):
+        images = [b'12345', b'12345']
+        for i in range(len(images)):
+            images[i] = base64.b64encode(images[i]).decode('utf-8')
+            images[i] = json.dumps(images[i])
+        data = {
+        "beautytitle": "пер.",
+        "title": "Перевал 56",
+        "other_titles": "оу",
+        "connect": "ыдвлаоы",
+        "add_time": "2023-02-07T09:51:32.582Z",
+        "users": {
+            "email": "test1@yandex.ru",
+            "name": "string",
+            "fam": "string",
+            "otc": "string",
+            "phone": "string"
+        },
+        "coords": {
+            "latitude": "88.88",
+            "longitude": "88.88",
+            "height": "214"
+        },
+        "level_winter": "string",
+        "level_spring": "string",
+        "level_summer": "string",
+        "level_autumn": "string",
+        "images": [
+            {
+            "title": "string",
+            "img": images[0]
+            },
+            {
+            "title": "string",
+            "img": images[1]
+            }
+            ]
+        }
+        response = self.client.post(reverse('submitData'), data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(PerevalAdded.objects.count(), 2)
+        self.assertEqual(Images.objects.count(), 4)
+        self.assertEqual(Users.objects.count(), 1)
+        self.assertEqual(PerevalImages.objects.count(), 4)
+        self.assertEqual(Coords.objects.count(), 2)

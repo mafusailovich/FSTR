@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
-from pereval.views import PerevalViewset
+from pereval.views import PerevalViewset, IMGVeiw
 from django.views.generic import TemplateView
 from rest_framework import permissions
 from django.conf.urls.static import static
@@ -29,4 +29,7 @@ urlpatterns = [
        template_name='swagger-ui.html',
        extra_context={'schema_url':'openapi-schema'},
    ), name='swagger-ui'),
+    path('submitData/img/', IMGVeiw.as_view({'post':'create', 'get':'list'}), name='img' ),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

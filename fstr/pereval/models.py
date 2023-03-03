@@ -56,3 +56,6 @@ class PerevalImages(models.Model):
 class PerevalAreas(models.Model):
     id_parent = models.BigIntegerField()
     title = models.TextField()
+
+class IMGTEST(models.Model):
+    img = models.ImageField(blank=True)
